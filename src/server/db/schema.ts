@@ -1,7 +1,11 @@
 import { relations } from "drizzle-orm";
-import { index, pgTableCreator, primaryKey } from "drizzle-orm/pg-core";
+import { index, pgTableCreator, primaryKey, 
+	text, 
+	varchar,
+  	timestamp,
+  	numeric,
+  	pgEnum}    from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "next-auth/adapters";
-
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
  * database instance for multiple projects.
@@ -9,6 +13,18 @@ import type { AdapterAccount } from "next-auth/adapters";
  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
  */
 export const createTable = pgTableCreator((name) => `purrfolio_${name}`);
+
+// Types for accounts
+export const accountTypeEnum = pgEnum("account_type", [
+  "bank",       // bank account
+  "investment", // investment account
+  "crypto",    // crypto wallet
+]);
+
+// Kategorien für Ausgaben
+export const categoryEnum = pgEnum("category", [
+  "income", "housing", "food", "transport", "leisure", "crypto_trade", "stock_trade", "other"
+]);
 
 export const posts = createTable(
 	"post",
@@ -49,7 +65,8 @@ export const users = createTable("user", (d) => ({
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
-	accounts: many(accounts),
+  accounts: many(accounts), // for login
+  financialAccounts: many(financialAccounts), // for financial data
 }));
 
 export const accounts = createTable(
@@ -106,3 +123,38 @@ export const verificationTokens = createTable(
 	}),
 	(t) => [primaryKey({ columns: [t.identifier, t.token] })],
 );
+
+export const financialAccounts = createTable("financial_account", (t) => ({
+  id: t.varchar({ length: 255 }).notNull().primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: t.varchar({ length: 255 }).notNull().references(() => users.id),
+  name: t.varchar({ length: 256 }).notNull(),
+  type: accountTypeEnum("type").notNull(),
+  currency: t.varchar({ length: 3 }).notNull().default("EUR"),
+  institutionName: t.varchar({ length: 256 }),
+  externalId: t.varchar({ length: 256 }),
+  createdAt: t.timestamp({ withTimezone: true }).defaultNow().notNull(),
+}));
+
+export const transactions = createTable("transaction", (t) => ({
+  id: t.varchar({ length: 255 }).notNull().primaryKey().$defaultFn(() => crypto.randomUUID()),
+  accountId: t.varchar({ length: 255 }).notNull().references(() => financialAccounts.id),
+  amount: t.numeric({ precision: 15, scale: 2 }).notNull(),
+  description: t.text().notNull(),
+  date: t.timestamp({ withTimezone: true }).notNull(),
+  category: categoryEnum("category").default("other"),
+}));
+
+export const holdings = createTable("holding", (t) => ({
+  id: t.varchar({ length: 255 }).notNull().primaryKey().$defaultFn(() => crypto.randomUUID()),
+  accountId: t.varchar({ length: 255 }).notNull().references(() => financialAccounts.id),
+  symbol: t.varchar({ length: 20 }).notNull(),
+  quantity: t.numeric({ precision: 20, scale: 10 }).notNull(),
+  averageBuyPrice: t.numeric({ precision: 15, scale: 2 }),
+  updatedAt: t.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+}));
+
+export const financialAccountRelations = relations(financialAccounts, ({ one, many }) => ({
+  user: one(users, { fields: [financialAccounts.userId], references: [users.id] }),
+  transactions: many(transactions),
+  holdings: many(holdings),
+}));
