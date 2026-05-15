@@ -19,6 +19,7 @@ export const env = createEnv({
 			.default("development"),
 		BITVAVO_API_KEY: z.string(),
   		BITVAVO_API_SECRET: z.string(),
+		ENABLE_BANKING_PRIVATE_KEY: z.string(),
 	},
 
 	/**
@@ -42,6 +43,7 @@ export const env = createEnv({
 		NODE_ENV: process.env.NODE_ENV,
 		BITVAVO_API_KEY: process.env.BITVAVO_API_KEY,
   		BITVAVO_API_SECRET: process.env.BITVAVO_API_SECRET,
+		ENABLE_BANKING_PRIVATE_KEY: process.env.ENABLE_BANKING_PRIVATE_KEY,
 	},
 	/**
 	 * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
