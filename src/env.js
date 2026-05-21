@@ -19,6 +19,8 @@ export const env = createEnv({
 			.default("development"),
 		BITVAVO_API_KEY: z.string(),
   		BITVAVO_API_SECRET: z.string(),
+		ENABLE_BANKING_APP_ID: z.string(),
+    	ENABLE_BANKING_REDIRECT_URI: z.string().url(),
 		ENABLE_BANKING_PRIVATE_KEY: z.string(),
 	},
 
@@ -43,6 +45,8 @@ export const env = createEnv({
 		NODE_ENV: process.env.NODE_ENV,
 		BITVAVO_API_KEY: process.env.BITVAVO_API_KEY,
   		BITVAVO_API_SECRET: process.env.BITVAVO_API_SECRET,
+		ENABLE_BANKING_APP_ID: process.env.ENABLE_BANKING_APP_ID,
+    	ENABLE_BANKING_REDIRECT_URI: process.env.ENABLE_BANKING_REDIRECT_URI,
 		ENABLE_BANKING_PRIVATE_KEY: process.env.ENABLE_BANKING_PRIVATE_KEY,
 	},
 	/**
